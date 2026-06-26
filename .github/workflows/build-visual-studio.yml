@@ -24,7 +24,7 @@ permissions:
 
 jobs:
   build-windows:
-    name: Build Windows x64 Release
+    name: Build sorted6 Windows x64 Release
     runs-on: windows-2022
 
     env:
@@ -37,25 +37,41 @@ jobs:
       - name: Setup MSBuild
         uses: microsoft/setup-msbuild@v2
 
-      - name: Find solution file
+      - name: Find sorted6 solution file
         shell: pwsh
         run: |
-          $solutionFiles = Get-ChildItem -Path "src" -Filter "*.sln" -Recurse
+          $solutionFiles = Get-ChildItem -Path "src" -Filter "sorted6.sln" -Recurse
 
           if ($solutionFiles.Count -eq 0) {
-            throw "No .sln file found inside src/. Create a Visual Studio 2022 solution in src. Placeholder project name: QuickSortPracticeApp."
+            throw "No sorted6.sln file found inside src/. Expected Visual Studio solution: src/**/sorted6.sln"
           }
 
           if ($solutionFiles.Count -gt 1) {
-            Write-Host "Found several .sln files:"
+            Write-Host "Found several sorted6.sln files:"
             $solutionFiles | ForEach-Object { Write-Host $_.FullName }
-            throw "Expected exactly one main .sln file inside src/."
+            throw "Expected exactly one sorted6.sln file inside src/."
           }
 
           $solutionFile = $solutionFiles[0].FullName
+          $solutionDir = Split-Path $solutionFile -Parent
+
           Write-Host "Using solution file: $solutionFile"
+          Write-Host "Solution directory: $solutionDir"
 
           "SOLUTION_FILE=$solutionFile" >> $env:GITHUB_ENV
+          "SOLUTION_DIR=$solutionDir" >> $env:GITHUB_ENV
+
+      - name: Check project file exists
+        shell: pwsh
+        run: |
+          $projectFiles = Get-ChildItem -Path "$env:SOLUTION_DIR" -Filter "sorted6.vcxproj" -Recurse
+
+          if ($projectFiles.Count -eq 0) {
+            throw "No sorted6.vcxproj file found near sorted6.sln. Expected Visual Studio project: sorted6.vcxproj"
+          }
+
+          Write-Host "Found project file:"
+          $projectFiles | ForEach-Object { Write-Host $_.FullName }
 
       - name: Restore solution
         shell: pwsh
@@ -70,15 +86,15 @@ jobs:
       - name: Find built executable
         shell: pwsh
         run: |
-          $exeFiles = Get-ChildItem -Path "src" -Filter "*.exe" -Recurse |
+          $exeFiles = Get-ChildItem -Path "$env:SOLUTION_DIR" -Filter "*.exe" -Recurse |
             Where-Object {
               $_.FullName -match "\\x64\\Release\\" -or
               $_.FullName -match "\\Release\\"
             }
 
           if ($exeFiles.Count -eq 0) {
-            Write-Host "No .exe found in common Release folders. Searching whole repository..."
-            $exeFiles = Get-ChildItem -Path "." -Filter "*.exe" -Recurse
+            Write-Host "No .exe found in common Release folders. Searching inside src..."
+            $exeFiles = Get-ChildItem -Path "src" -Filter "*.exe" -Recurse
           }
 
           if ($exeFiles.Count -eq 0) {
@@ -102,7 +118,7 @@ jobs:
         shell: pwsh
         run: |
           $branchName = "${{ github.ref_name }}"
-          $zipName = "quicksort-windows-$branchName.zip"
+          $zipName = "sorted6-windows-$branchName.zip"
 
           Compress-Archive -Path "package/*" -DestinationPath $zipName -Force
 
@@ -113,7 +129,7 @@ jobs:
       - name: Upload build artifact
         uses: actions/upload-artifact@v4
         with:
-          name: quicksort-windows-${{ github.ref_name }}
+          name: sorted6-windows-${{ github.ref_name }}
           path: ${{ env.ZIP_NAME }}
           retention-days: 14
 
@@ -133,7 +149,7 @@ jobs:
             --repo $env:GITHUB_REPOSITORY `
             --target $env:GITHUB_SHA `
             --title "Develop latest build" `
-            --notes "Автоматическая сборка Visual Studio C++ проекта из ветки develop. Commit: $env:GITHUB_SHA" `
+            --notes "Автоматическая сборка проекта sorted6 из ветки develop. Commit: $env:GITHUB_SHA" `
             --prerelease
 
       - name: Publish main latest release
@@ -152,4 +168,4 @@ jobs:
             --repo $env:GITHUB_REPOSITORY `
             --target $env:GITHUB_SHA `
             --title "Main latest build" `
-            --notes "Автоматическая сборка Visual Studio C++ проекта из ветки main. Commit: $env:GITHUB_SHA"
+            --notes "Автоматическая сборка проекта sorted6 из ветки main. Commit: $env:GITHUB_SHA"
