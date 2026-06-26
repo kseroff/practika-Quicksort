@@ -34,65 +34,77 @@ jobs:
           gh label create "component: docs" --description "Документация в папке docs" --color "0052cc" --force --repo "$REPO"
           gh label create "component: test-results" --description "Результаты тестирования в папке test-results" --color "5319e7" --force --repo "$REPO"
 
-      - name: Prepare issue bodies
+      - name: Create QuickSort issues
         run: |
-          mkdir -p /tmp/quicksort-issues
+          create_issue_if_missing() {
+            TITLE="$1"
+            LABELS="$2"
+            BODY="$3"
 
-          cat > /tmp/quicksort-issues/vs-project.md <<'EOF'
-          ## Описание
+            EXISTING_URL=$(gh issue list \
+              --repo "$REPO" \
+              --state all \
+              --search "$TITLE in:title" \
+              --json title,url \
+              --jq ".[] | select(.title == \"$TITLE\") | .url" | head -n 1)
 
-          Нужно создать базовый Visual Studio 2022 C++ проект в папке `src`.
+            if [ -n "$EXISTING_URL" ]; then
+              echo "Issue already exists: $TITLE"
+              echo "$EXISTING_URL"
+            else
+              echo "Creating issue: $TITLE"
+              gh issue create \
+                --repo "$REPO" \
+                --title "$TITLE" \
+                --label "$LABELS" \
+                --body "$BODY"
+            fi
+          }
 
-          Название-заглушка проекта:
+          create_issue_if_missing \
+            "Создать Visual Studio 2022 C++ проект sorted6 в src" \
+            "type: feature,priority: high,component: src" \
+            "## Описание
 
-          ```text
-          QuickSortPracticeApp
-          ```
-
-          Позже название можно поменять.
+          Нужно создать или добавить Visual Studio 2022 C++ проект \`sorted6\` в папку \`src\`.
 
           ## Требования
 
-          - проект должен лежать в папке `src`;
-          - в `src` должен быть `.sln` файл;
-          - проект должен собираться в конфигурации `Release|x64`;
-          - не нужно добавлять временные файлы Visual Studio;
-          - `.sln`, `.vcxproj`, `.cpp`, `.h` должны храниться в Git.
-
-          ## Результат
-
-          После выполнения GitHub Actions должен находить `.sln` внутри `src` и запускать MSBuild.
+          - в папке \`src\` должен быть файл \`sorted6.sln\`;
+          - рядом с ним должен быть \`sorted6.vcxproj\`;
+          - проект должен собираться в конфигурации \`Release|x64\`;
+          - временные файлы Visual Studio не добавлять в Git;
+          - исходный код должен находиться внутри \`src\`.
 
           ## Ветка
 
-          ```bash
-          feature/setup-visual-studio-project
-          ```
+          \`\`\`bash
+          feature/setup-sorted6-project
+          \`\`\`
 
           ## Pull Request
 
-          ```text
-          feature/setup-visual-studio-project -> develop
-          ```
-          EOF
+          \`\`\`text
+          feature/setup-sorted6-project -> develop
+          \`\`\`"
 
-          cat > /tmp/quicksort-issues/quicksort-algorithm.md <<'EOF'
-          ## Описание
+          create_issue_if_missing \
+            "Реализовать алгоритм QuickSort" \
+            "type: feature,priority: high,component: src" \
+            "## Описание
 
           Нужно реализовать алгоритм быстрой сортировки QuickSort на C++.
 
           ## Требования
 
-          - реализация находится в папке `src`;
-          - сортировка должна работать с массивом или `std::vector<int>`;
-          - должна поддерживаться сортировка по возрастанию;
-          - желательно отделить алгоритм сортировки от пользовательского интерфейса;
-          - код должен быть понятным и пригодным для review.
+          - сортировка массива или \`std::vector<int>\`;
+          - сортировка по возрастанию;
+          - код должен быть отделён от консольного интерфейса;
+          - реализация должна быть понятной для code review.
 
-          ## Проверка
+          ## Проверить
 
-          Проверить работу на массивах:
-
+          - обычный массив;
           - уже отсортированный массив;
           - массив в обратном порядке;
           - массив с одинаковыми значениями;
@@ -101,57 +113,55 @@ jobs:
 
           ## Ветка
 
-          ```bash
+          \`\`\`bash
           feature/quicksort-algorithm
-          ```
+          \`\`\`
 
           ## Pull Request
 
-          ```text
+          \`\`\`text
           feature/quicksort-algorithm -> develop
-          ```
-          EOF
+          \`\`\`"
 
-          cat > /tmp/quicksort-issues/metrics.md <<'EOF'
-          ## Описание
+          create_issue_if_missing \
+            "Добавить сбор метрик QuickSort" \
+            "type: feature,priority: medium,component: src" \
+            "## Описание
 
           Нужно добавить сбор метрик работы QuickSort.
 
           ## Метрики
 
           - количество сравнений;
-          - количество перестановок или обменов;
+          - количество обменов;
           - количество рекурсивных вызовов;
           - размер входного массива;
           - время выполнения.
 
-          ## Требования
+          ## Результат
 
-          - метрики должны выводиться после сортировки;
-          - метрики должны быть понятны пользователю;
-          - сбор метрик не должен ломать основную сортировку.
+          Метрики должны выводиться после сортировки.
 
           ## Ветка
 
-          ```bash
+          \`\`\`bash
           feature/quicksort-metrics
-          ```
+          \`\`\`
 
           ## Pull Request
 
-          ```text
+          \`\`\`text
           feature/quicksort-metrics -> develop
-          ```
-          EOF
+          \`\`\`"
 
-          cat > /tmp/quicksort-issues/console-interface.md <<'EOF'
-          ## Описание
+          create_issue_if_missing \
+            "Сделать консольный интерфейс приложения" \
+            "type: feature,priority: high,component: src" \
+            "## Описание
 
-          Нужно сделать консольный интерфейс для приложения QuickSort.
+          Нужно сделать консольный интерфейс для приложения sorted6.
 
-          ## Требования
-
-          В интерфейсе должны быть пункты:
+          ## Меню должно позволять
 
           - создать массив вручную;
           - сгенерировать случайный массив;
@@ -160,29 +170,24 @@ jobs:
           - вывести результат;
           - выйти из программы.
 
-          ## Требования к качеству
-
-          - пользователь должен понимать, что нужно вводить;
-          - программа не должна аварийно завершаться при неправильном вводе;
-          - сообщения об ошибках должны быть понятными.
-
           ## Ветка
 
-          ```bash
+          \`\`\`bash
           feature/console-interface
-          ```
+          \`\`\`
 
           ## Pull Request
 
-          ```text
+          \`\`\`text
           feature/console-interface -> develop
-          ```
-          EOF
+          \`\`\`"
 
-          cat > /tmp/quicksort-issues/input-validation.md <<'EOF'
-          ## Описание
+          create_issue_if_missing \
+            "Добавить валидацию входных данных" \
+            "type: feature,priority: medium,component: src" \
+            "## Описание
 
-          Нужно добавить валидацию входных данных.
+          Нужно добавить проверку входных данных.
 
           ## Проверить
 
@@ -200,19 +205,20 @@ jobs:
 
           ## Ветка
 
-          ```bash
+          \`\`\`bash
           feature/input-validation
-          ```
+          \`\`\`
 
           ## Pull Request
 
-          ```text
+          \`\`\`text
           feature/input-validation -> develop
-          ```
-          EOF
+          \`\`\`"
 
-          cat > /tmp/quicksort-issues/file-io.md <<'EOF'
-          ## Описание
+          create_issue_if_missing \
+            "Реализовать чтение и запись файлов" \
+            "type: feature,priority: medium,component: src" \
+            "## Описание
 
           Нужно реализовать чтение массива из файла и сохранение результата сортировки.
 
@@ -220,37 +226,28 @@ jobs:
 
           - пользователь может указать путь к входному файлу;
           - файл содержит целые числа;
-          - программа проверяет ошибки открытия и чтения файла;
+          - программа проверяет ошибки открытия и чтения;
           - отсортированный массив можно сохранить в файл;
           - результаты должны храниться в понятном формате.
 
-          ## Рекомендация
-
-          Для результатов можно использовать папку:
-
-          ```text
-          test-results/
-          ```
-
-          Но исходный код должен оставаться в `src`.
-
           ## Ветка
 
-          ```bash
+          \`\`\`bash
           feature/file-input-output
-          ```
+          \`\`\`
 
           ## Pull Request
 
-          ```text
+          \`\`\`text
           feature/file-input-output -> develop
-          ```
-          EOF
+          \`\`\`"
 
-          cat > /tmp/quicksort-issues/testing.md <<'EOF'
-          ## Описание
+          create_issue_if_missing \
+            "Провести тестирование QuickSort" \
+            "type: test,priority: high,component: test-results" \
+            "## Описание
 
-          Нужно протестировать приложение QuickSort и оформить результаты тестирования.
+          Нужно протестировать приложение sorted6 и оформить результаты тестирования.
 
           ## Проверить
 
@@ -269,42 +266,35 @@ jobs:
 
           Создать файл:
 
-          ```text
+          \`\`\`text
           test-results/testing-report.md
-          ```
-
-          В отчёте указать:
-
-          - что тестировалось;
-          - входные данные;
-          - ожидаемый результат;
-          - фактический результат;
-          - найденные ошибки.
+          \`\`\`
 
           ## Ветка
 
-          ```bash
+          \`\`\`bash
           feature/testing-report
-          ```
+          \`\`\`
 
           ## Pull Request
 
-          ```text
+          \`\`\`text
           feature/testing-report -> develop
-          ```
-          EOF
+          \`\`\`"
 
-          cat > /tmp/quicksort-issues/docs.md <<'EOF'
-          ## Описание
+          create_issue_if_missing \
+            "Подготовить документацию проекта" \
+            "type: docs,priority: medium,component: docs" \
+            "## Описание
 
-          Нужно подготовить документацию проекта.
+          Нужно подготовить документацию проекта sorted6.
 
           ## Документация должна содержать
 
           - цель проекта;
           - описание QuickSort;
           - как открыть проект в Visual Studio 2022;
-          - где находится `.sln`;
+          - где находится \`sorted6.sln\`;
           - как собрать проект;
           - как запустить программу;
           - как вводить данные;
@@ -316,86 +306,18 @@ jobs:
 
           Создать файл:
 
-          ```text
+          \`\`\`text
           docs/user-guide.md
-          ```
+          \`\`\`
 
           ## Ветка
 
-          ```bash
+          \`\`\`bash
           feature/project-documentation
-          ```
+          \`\`\`
 
           ## Pull Request
 
-          ```text
+          \`\`\`text
           feature/project-documentation -> develop
-          ```
-          EOF
-
-      - name: Create issues
-        run: |
-          create_issue_if_missing() {
-            TITLE="$1"
-            LABELS="$2"
-            BODY_FILE="$3"
-
-            EXISTING_URL=$(gh issue list \
-              --repo "$REPO" \
-              --state all \
-              --search "$TITLE in:title" \
-              --json title,url \
-              --jq ".[] | select(.title == \"$TITLE\") | .url" | head -n 1)
-
-            if [ -n "$EXISTING_URL" ]; then
-              echo "Issue already exists: $TITLE"
-              echo "$EXISTING_URL"
-            else
-              echo "Creating issue: $TITLE"
-              gh issue create \
-                --repo "$REPO" \
-                --title "$TITLE" \
-                --label "$LABELS" \
-                --body-file "$BODY_FILE"
-            fi
-          }
-
-          create_issue_if_missing \
-            "Создать Visual Studio 2022 C++ проект в src" \
-            "type: feature,priority: high,component: src" \
-            "/tmp/quicksort-issues/vs-project.md"
-
-          create_issue_if_missing \
-            "Реализовать алгоритм QuickSort" \
-            "type: feature,priority: high,component: src" \
-            "/tmp/quicksort-issues/quicksort-algorithm.md"
-
-          create_issue_if_missing \
-            "Добавить сбор метрик QuickSort" \
-            "type: feature,priority: medium,component: src" \
-            "/tmp/quicksort-issues/metrics.md"
-
-          create_issue_if_missing \
-            "Сделать консольный интерфейс приложения" \
-            "type: feature,priority: high,component: src" \
-            "/tmp/quicksort-issues/console-interface.md"
-
-          create_issue_if_missing \
-            "Добавить валидацию входных данных" \
-            "type: feature,priority: medium,component: src" \
-            "/tmp/quicksort-issues/input-validation.md"
-
-          create_issue_if_missing \
-            "Реализовать чтение и запись файлов" \
-            "type: feature,priority: medium,component: src" \
-            "/tmp/quicksort-issues/file-io.md"
-
-          create_issue_if_missing \
-            "Провести тестирование QuickSort" \
-            "type: test,priority: high,component: test-results" \
-            "/tmp/quicksort-issues/testing.md"
-
-          create_issue_if_missing \
-            "Подготовить документацию проекта" \
-            "type: docs,priority: medium,component: docs" \
-            "/tmp/quicksort-issues/docs.md"
+          \`\`\`"

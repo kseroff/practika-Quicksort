@@ -8,7 +8,6 @@ on:
       - reopened
     branches:
       - develop
-      - main
 
 permissions:
   pull-requests: write
