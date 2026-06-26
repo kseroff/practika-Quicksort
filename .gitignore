@@ -1,0 +1,41 @@
+# Visual Studio
+.vs/
+*.user
+*.suo
+*.VC.db
+*.VC.opendb
+*.sdf
+*.opensdf
+*.ipch
+*.aps
+*.ncb
+
+# Build folders
+Debug/
+Release/
+x64/
+x86/
+build/
+out/
+bin/
+obj/
+
+# Compiled files
+*.exe
+*.dll
+*.obj
+*.pdb
+*.ilk
+*.lib
+*.exp
+*.log
+*.tlog
+
+# CMake, optional
+CMakeFiles/
+CMakeCache.txt
+cmake-build-*/
+
+# OS
+.DS_Store
+Thumbs.db
