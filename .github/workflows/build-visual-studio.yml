@@ -126,7 +126,7 @@ jobs:
       - name: Upload build artifact
         uses: actions/upload-artifact@v4
         with:
-          name: build-${{ github.ref_name }}
+          name: sorted6-${{ github.ref_name }}
           path: ${{ env.ZIP_NAME }}
           retention-days: 14
 
