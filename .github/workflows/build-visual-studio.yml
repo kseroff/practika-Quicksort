@@ -117,7 +117,7 @@ jobs:
       - name: Create zip package
         shell: pwsh
         run: |
-          $branchName = "${{ github.ref_name }}"
+          $branchName = "${{ github.ref_name }}".Replace("/", "-")
           $zipName = "sorted6-$branchName.zip"
           Compress-Archive -Path "package/*" -DestinationPath $zipName -Force
           "ZIP_NAME=$zipName" >> $env:GITHUB_ENV
