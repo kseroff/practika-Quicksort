@@ -118,18 +118,15 @@ jobs:
         shell: pwsh
         run: |
           $branchName = "${{ github.ref_name }}"
-          $zipName = "sorted6-windows-$branchName.zip"
-
+          $zipName = "sorted6-$branchName.zip"
           Compress-Archive -Path "package/*" -DestinationPath $zipName -Force
-
           "ZIP_NAME=$zipName" >> $env:GITHUB_ENV
-
           Write-Host "Created package: $zipName"
 
       - name: Upload build artifact
         uses: actions/upload-artifact@v4
         with:
-          name: sorted6-windows-${{ github.ref_name }}
+          name: sorted6-${{ github.ref_name }}
           path: ${{ env.ZIP_NAME }}
           retention-days: 14
 
