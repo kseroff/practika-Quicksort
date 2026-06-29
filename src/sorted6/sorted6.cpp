@@ -1,4 +1,4 @@
-﻿#define _CRT_SECURE_NO_WARNINGS
+#define _CRT_SECURE_NO_WARNINGS
 #include <stdio.h>
 
 int partition(int arr[], int first, int last) {
@@ -35,7 +35,6 @@ void a_rr(int arr[], int size) {
     sort_arr(arr, 0, size - 1);
 }
 
-
 void print_arr(int arr[], int size, const char* message) {
     printf("%s", message);
     for (int i = 0; i < size; i++) {
@@ -54,11 +53,9 @@ void test_sort(int arr[], int size, const char* testName) {
 }
 
 int main() {
-
     int arr1[] = { 5, 5, 5, 5, 5, 5, 5, 5, 5, 5 };
     int size1 = sizeof(arr1) / sizeof(arr1[0]);
     test_sort(arr1, size1, "Array with identical values");
-
 
     int arr2[] = { -5, 3, -8, 1, -2, 7, -4, 6, -1, 10 };
     int size2 = sizeof(arr2) / sizeof(arr2[0]);
