@@ -2,21 +2,34 @@
 #include <stdio.h>
 #include <windows.h>
 
+void swap(int* a, int* b) {
+    int temp = *a;
+    *a = *b;
+    *b = temp;
+}
 int partition(int arr[], int first, int last) {
-    int p = arr[last];
+
+    int mid = first + (last - first) / 2;
+    if (arr[first] > arr[mid]) {
+        swap(&arr[first], &arr[mid]);
+    }
+    if (arr[first] > arr[last]) {
+        swap(&arr[first], &arr[last]);
+    }
+    if (arr[mid] > arr[last]) {
+        swap(&arr[mid], &arr[last]);
+    }
+    swap(&arr[mid], &arr[last]);
+    int pivot = arr[last];
     int i = first - 1;
 
     for (int j = first; j < last; j++) {
-        if (arr[j] <= p) {
+        if (arr[j] <= pivot) {
             i++;
-            int temp = arr[i];
-            arr[i] = arr[j];
-            arr[j] = temp;
+            swap(&arr[i], &arr[j]);
         }
     }
-    int temp = arr[i + 1];
-    arr[i + 1] = arr[last];
-    arr[last] = temp;
+    swap(&arr[i + 1], &arr[last]);  
 
     return i + 1;
 }
@@ -29,8 +42,8 @@ void sort_arr(int arr[], int first, int last) {
     }
 }
 
-void a_rr(int arr[], int size) {
-    if (size == 0 || size == 1) {
+void quick_sort(int arr[], int size) {
+    if ( arr == NULL || size < 2) {
         return;
     }
     sort_arr(arr, 0, size - 1);
@@ -48,7 +61,7 @@ void test_sort(int arr[], int size, const char* testName) {
     printf("\n%s\n", testName);
     print_arr(arr, size, "  Исходный:        ");
 
-    a_rr(arr, size);
+    quick_sort(arr, size);
 
     print_arr(arr, size, "  Отсортированный: ");
 }
