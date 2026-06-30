@@ -1,4 +1,4 @@
-[30.06.2026 3:10] соняу: #define _CRT_SECURE_NO_WARNINGS
+#define _CRT_SECURE_NO_WARNINGS
 #include <stdio.h>
 #include <stdlib.h>
 #include <windows.h>
@@ -65,7 +65,7 @@ void quick_sort(int arr[], int size) {
     swaps = 0;
     recursive_calls = 0;
 
-    if (arr == NULL  size < 2) {
+    if (arr == NULL  || size < 2) {
         return;
     }
     sort_arr(arr, 0, size - 1);
@@ -118,7 +118,7 @@ void create_manual_array() {
     scanf("%d", &n);
     clear_input();
 
-    if (n <= 0  n > MAX_SIZE) {
+    if (n <= 0  || n > MAX_SIZE) {
         printf("\nОшибка: размер должен быть от 1 до %d\n", MAX_SIZE);
         return;
     }
@@ -165,7 +165,7 @@ void generate_random_array() {
 
     printf("\nСлучайный массив успешно создан!\n");
 }
-[30.06.2026 3:10] соняу: void load_from_file() {
+void load_from_file() {
     char filename[256];
     printf("\nВведите имя файла для загрузки: ");
     fgets(filename, sizeof(filename), stdin);
@@ -241,8 +241,8 @@ void sort_current_array() {
 }
 
 int main() {
-    SetConsoleOutputCP(1251);
-    SetConsoleCP(1251);
+    SetConsoleOutputCP(65001);
+    SetConsoleCP(65001);
 
     int choice;
 
