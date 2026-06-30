@@ -67,7 +67,7 @@ void quick_sort(int arr[], int size) {
     swaps = 0;
     recursive_calls = 0;
 
-    if (arr == NULL  size < 2) {
+    if (arr == NULL  || size < 2) {
         return;
     }
     sort_arr(arr, 0, size - 1);
@@ -99,7 +99,7 @@ void clear_input() {
 }
 
 int is_number(const char* str) {
-    if (str == NULL * str == '\0') {
+    if (str == NULL || * str == '\0') {
         return 0;
     }
     int i = 0;
@@ -344,8 +344,8 @@ void sort_current_array() {
 }
 
 int main() {
-    SetConsoleOutputCP(1251);
-    SetConsoleCP(1251);
+    SetConsoleOutputCP(65001);
+    SetConsoleCP(65001);
 
     int choice;
 
