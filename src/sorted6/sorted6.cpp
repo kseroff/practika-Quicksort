@@ -1,11 +1,16 @@
 #define _CRT_SECURE_NO_WARNINGS
 #include <stdio.h>
+#include <stdlib.h>
 #include <windows.h>
 #include <time.h>
+
+#define MAX_SIZE 1000
 
 long long comparisons = 0;
 long long swaps = 0;
 long long recursive_calls = 0;
+int current_array[MAX_SIZE];
+int current_size = 0;
 
 void swap(int* a, int* b) {
     int temp = *a;
@@ -60,7 +65,7 @@ void quick_sort(int arr[], int size) {
     swaps = 0;
     recursive_calls = 0;
 
-    if (arr == NULL || size < 2) {
+    if (arr == NULL  || size < 2) {
         return;
     }
     sort_arr(arr, 0, size - 1);
@@ -75,56 +80,209 @@ void print_arr(int arr[], int size, const char* message) {
 }
 
 void print_metrics(int size, double time_seconds) {
-    printf("\n МЕТРИКИ СОРТИРОВКИ \n");
-    printf("Размер массива:       %d\n", size);
-    printf("Сравнений:            %lld\n", comparisons);
-    printf("Обменов:              %lld\n", swaps);
-    printf("Рекурсивных вызовов:  %lld\n", recursive_calls);
-    printf("Время выполнения:     %.6f сек\n", time_seconds);
+    printf("\n");
+    printf("           МЕТРИКИ СОРТИРОВКИ\n");
+    printf("\n");
+    printf("  Размер массива:       %d\n", size);
+    printf("  Сравнений:            %lld\n", comparisons);
+    printf("  Обменов:              %lld\n", swaps);
+    printf("  Рекурсивных вызовов:  %lld\n", recursive_calls);
+    printf("  Время выполнения:     %.6f сек\n", time_seconds);
     printf("\n");
 }
 
-void test_sort(int arr[], int size, const char* testName) {
-    printf("\n%s\n", testName);
-    print_arr(arr, size, "  Исходный:        ");
+void clear_input() {
+    int c;
+    while ((c = getchar()) != '\n' && c != EOF) {}
+}
+
+void menu() {
+    system("cls");
+    printf("\n");
+    printf("     БЫСТРАЯ СОРТИРОВКА (QuickSort)\n");
+    printf("\n");
+    printf("  1. Создать массив вручную\n");
+    printf("  2. Сгенерировать случайный массив\n");
+    printf("  3. Загрузить массив из файла\n");
+    printf("  4. Отсортировать текущий массив\n");
+    printf("  5. Вывести текущий массив\n");
+    printf("  6. Сохранить массив в файл\n");
+    printf("  7. Выйти из программы\n");
+    printf("\n");
+    printf("Ваш выбор: ");
+}
+
+void create_manual_array() {
+    int n;
+    printf("\nВведите размер массива: ");
+    scanf("%d", &n);
+    clear_input();
+
+    if (n <= 0  || n > MAX_SIZE) {
+        printf("\nОшибка: размер должен быть от 1 до %d\n", MAX_SIZE);
+        return;
+    }
+
+    current_size = n;
+    printf("Введите %d элементов через пробел: ", n);
+    for (int i = 0; i < n; i++) {
+        scanf("%d", &current_array[i]);
+    }
+    clear_input();
+
+    printf("\nМассив успешно создан!\n");
+}
+
+void generate_random_array() {
+    int n, min_val, max_val;
+    printf("\nВведите размер массива: ");
+    scanf("%d", &n);
+    clear_input();
+
+    if (n <= 0 || n > MAX_SIZE) {
+        printf("\nОшибка: размер должен быть от 1 до %d\n", MAX_SIZE);
+        return;
+    }
+
+    printf("Введите минимальное значение: ");
+    scanf("%d", &min_val);
+    clear_input();
+
+    printf("Введите максимальное значение: ");
+    scanf("%d", &max_val);
+    clear_input();
+
+    if (min_val >= max_val) {
+        printf("\nОшибка: минимум должен быть меньше максимума\n");
+        return;
+    }
+
+    current_size = n;
+    srand((unsigned)time(NULL));
+    for (int i = 0; i < n; i++) {
+        current_array[i] = min_val + rand() % (max_val - min_val + 1);
+    }
+
+    printf("\nСлучайный массив успешно создан!\n");
+}
+void load_from_file() {
+    char filename[256];
+    printf("\nВведите имя файла для загрузки: ");
+    fgets(filename, sizeof(filename), stdin);
+    filename[strcspn(filename, "\n")] = 0;
+
+    FILE* file = fopen(filename, "r");
+    if (file == NULL) {
+        printf("\nОшибка: не удалось открыть файл %s\n", filename);
+        return;
+    }
+
+    current_size = 0;
+    while (fscanf(file, "%d", &current_array[current_size]) == 1 && current_size < MAX_SIZE) {
+        current_size++;
+    }
+    fclose(file);
+
+    if (current_size == 0) {
+        printf("\nОшибка: файл пуст или содержит некорректные данные\n");
+    }
+    else {
+        printf("\nЗагружено %d элементов из файла %s\n", current_size, filename);
+    }
+}
+
+void save_to_file() {
+    if (current_size == 0) {
+        printf("\nМассив пуст! Нечего сохранять.\n");
+        return;
+    }
+
+    char filename[256];
+    printf("\nВведите имя файла для сохранения: ");
+    fgets(filename, sizeof(filename), stdin);
+    filename[strcspn(filename, "\n")] = 0;
+
+    FILE* file = fopen(filename, "w");
+    if (file == NULL) {
+        printf("\nОшибка: не удалось создать файл %s\n", filename);
+        return;
+    }
+
+    for (int i = 0; i < current_size; i++) {
+        fprintf(file, "%d", current_array[i]);
+        if (i < current_size - 1) {
+            fprintf(file, ",");
+        }
+    }
+    fprintf(file, "\n");
+    fclose(file);
+
+    printf("\nМассив сохранён в файл %s\n", filename);
+}
+
+void sort_current_array() {
+    if (current_size == 0) {
+        printf("\nМассив пуст! Сначала создайте или загрузите массив.\n");
+        return;
+    }
+
+    printf("\nИсходный массив: ");
+    print_arr(current_array, current_size, "");
 
     clock_t start = clock();
-    quick_sort(arr, size);
+    quick_sort(current_array, current_size);
     clock_t end = clock();
     double time_seconds = (double)(end - start) / CLOCKS_PER_SEC;
 
-    print_arr(arr, size, "  Отсортированный: ");
+    printf("Отсортированный массив: ");
+    print_arr(current_array, current_size, "");
 
-    print_metrics(size, time_seconds);
+    print_metrics(current_size, time_seconds);
 }
 
 int main() {
-    SetConsoleOutputCP(1251);
-    SetConsoleCP(1251);
+    SetConsoleOutputCP(65001);
+    SetConsoleCP(65001);
 
-    int arr1[] = { 5, 5, 5, 5, 5, 5, 5, 5, 5, 5 };
-    int size1 = sizeof(arr1) / sizeof(arr1[0]);
-    test_sort(arr1, size1, "Массив с одинаковыми значениями");
+    int choice;
 
-    int arr2[] = { -5, 3, -8, 1, -2, 7, -4, 6, -1, 10 };
-    int size2 = sizeof(arr2) / sizeof(arr2[0]);
-    test_sort(arr2, size2, "Массив с отрицательными числами");
+    do {
+        menu();
+        scanf("%d", &choice);
+        clear_input();
 
-    int arr3[] = { 42 };
-    int size3 = sizeof(arr3) / sizeof(arr3[0]);
-    test_sort(arr3, size3, "Массив из одного элемента");
+        switch (choice) {
+        case 1:
+            create_manual_array();
+            break;
+        case 2:
+            generate_random_array();
+            break;
+        case 3:
+            load_from_file();
+            break;
+        case 4:
+            sort_current_array();
+            break;
+        case 5:
+            printf("\nТекущий массив: ");
+            print_arr(current_array, current_size, "");
+            break;
+        case 6:
+            save_to_file();
+            break;
+        case 7:
+            printf("\nВыход из программы...\n");
+            break;
+        default:
+            printf("\nОшибка: неверный выбор. Попробуйте снова.\n");
+        }
 
-    int arr4[] = { 64, 34, 25, 12, 22, 11, 90 };
-    int size4 = sizeof(arr4) / sizeof(arr4[0]);
-    test_sort(arr4, size4, "Обычный массив");
-
-    int arr5[] = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 };
-    int size5 = sizeof(arr5) / sizeof(arr5[0]);
-    test_sort(arr5, size5, "Уже отсортированный массив");
-
-    int arr6[] = { 10, 9, 8, 7, 6, 5, 4, 3, 2, 1 };
-    int size6 = sizeof(arr6) / sizeof(arr6[0]);
-    test_sort(arr6, size6, "Массив в обратном порядке");
+        if (choice != 7) {
+            printf("\nНажмите Enter для продолжения...");
+            clear_input();
+        }
+    } while (choice != 7);
 
     return 0;
 }
