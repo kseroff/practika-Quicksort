@@ -1,40 +1,53 @@
 #define _CRT_SECURE_NO_WARNINGS
 #include <stdio.h>
 #include <windows.h>
+#include <time.h>
+
+long long comparisons = 0;
+long long swaps = 0;
+long long recursive_calls = 0;
 
 void swap(int* a, int* b) {
     int temp = *a;
     *a = *b;
     *b = temp;
+    swaps++;
 }
-int partition(int arr[], int first, int last) {
 
+int partition(int arr[], int first, int last) {
     int mid = first + (last - first) / 2;
+
+    comparisons++;
     if (arr[first] > arr[mid]) {
         swap(&arr[first], &arr[mid]);
     }
+    comparisons++;
     if (arr[first] > arr[last]) {
         swap(&arr[first], &arr[last]);
     }
+    comparisons++;
     if (arr[mid] > arr[last]) {
         swap(&arr[mid], &arr[last]);
     }
     swap(&arr[mid], &arr[last]);
+
     int pivot = arr[last];
     int i = first - 1;
 
     for (int j = first; j < last; j++) {
+        comparisons++;
         if (arr[j] <= pivot) {
             i++;
             swap(&arr[i], &arr[j]);
         }
     }
-    swap(&arr[i + 1], &arr[last]);  
+    swap(&arr[i + 1], &arr[last]);
 
     return i + 1;
 }
 
 void sort_arr(int arr[], int first, int last) {
+    recursive_calls++;
     if (first < last) {
         int p_index = partition(arr, first, last);
         sort_arr(arr, first, p_index - 1);
@@ -43,7 +56,11 @@ void sort_arr(int arr[], int first, int last) {
 }
 
 void quick_sort(int arr[], int size) {
-    if ( arr == NULL || size < 2) {
+    comparisons = 0;
+    swaps = 0;
+    recursive_calls = 0;
+
+    if (arr == NULL || size < 2) {
         return;
     }
     sort_arr(arr, 0, size - 1);
@@ -57,13 +74,28 @@ void print_arr(int arr[], int size, const char* message) {
     printf("\n");
 }
 
+void print_metrics(int size, double time_seconds) {
+    printf("\n МЕТРИКИ СОРТИРОВКИ \n");
+    printf("Размер массива:       %d\n", size);
+    printf("Сравнений:            %lld\n", comparisons);
+    printf("Обменов:              %lld\n", swaps);
+    printf("Рекурсивных вызовов:  %lld\n", recursive_calls);
+    printf("Время выполнения:     %.6f сек\n", time_seconds);
+    printf("\n");
+}
+
 void test_sort(int arr[], int size, const char* testName) {
     printf("\n%s\n", testName);
     print_arr(arr, size, "  Исходный:        ");
 
+    clock_t start = clock();
     quick_sort(arr, size);
+    clock_t end = clock();
+    double time_seconds = (double)(end - start) / CLOCKS_PER_SEC;
 
     print_arr(arr, size, "  Отсортированный: ");
+
+    print_metrics(size, time_seconds);
 }
 
 int main() {
