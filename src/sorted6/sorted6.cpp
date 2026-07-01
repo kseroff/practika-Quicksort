@@ -7,7 +7,7 @@
 #include <string.h>
 #include <limits.h>
 
-#define MAX_SIZE 1000
+#define MAX_SIZE 50000
 
 long long comparisons = 0;
 long long swaps = 0;
