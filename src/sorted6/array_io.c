@@ -1,4 +1,7 @@
 #define _CRT_SECURE_NO_WARNINGS
+#include "array_io.h"
+#include "sort.h"
+#include "metrics.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <windows.h>
@@ -7,118 +10,9 @@
 #include <string.h>
 #include <limits.h>
 
-#define MAX_SIZE 50000
 
-long long comparisons = 0;
-long long swaps = 0;
-long long recursive_calls = 0;
 int current_array[MAX_SIZE];
 int current_size = 0;
-
-void swap(int* a, int* b) {
-    int temp = *a;
-    *a = *b;
-    *b = temp;
-    swaps++;
-}
-
-void three_way_partition(int arr[], int first, int last, int* lt, int* gt) {
-    if (first >= last) {
-        *lt = first;
-        *gt = last;
-        return;
-    }
-
-    int mid = first + (last - first) / 2;
-    if (arr[first] > arr[mid]) swap(&arr[first], &arr[mid]);
-    if (arr[first] > arr[last]) swap(&arr[first], &arr[last]);
-    if (arr[mid] > arr[last]) swap(&arr[mid], &arr[last]);
-    swap(&arr[mid], &arr[last]);
-
-    int pivot = arr[last];
-    int i = first;
-    int lt_ptr = first;
-    int gt_ptr = last;
-
-    while (i <= gt_ptr) {
-        comparisons++;
-        if (arr[i] < pivot) {
-            swap(&arr[i], &arr[lt_ptr]);
-            lt_ptr++;
-            i++;
-        }
-        else if (arr[i] > pivot) {
-            swap(&arr[i], &arr[gt_ptr]);
-            gt_ptr--;
-        }
-        else {
-            i++;
-        }
-    }
-
-    *lt = lt_ptr;
-    *gt = gt_ptr;
-}
-
-void sort_arr(int arr[], int first, int last) {
-    recursive_calls++;
-    if (first < last) {
-        int lt, gt;
-        three_way_partition(arr, first, last, &lt, &gt);
-
-        int left_size = lt - first;
-        int right_size = last - gt;
-
-        if (left_size < right_size) {
-            sort_arr(arr, first, lt - 1);
-            sort_arr(arr, gt + 1, last);
-        }
-        else {
-            sort_arr(arr, gt + 1, last);
-            sort_arr(arr, first, lt - 1);
-        }
-    }
-}
-
-void quick_sort(int arr[], int size) {
-    comparisons = 0;
-    swaps = 0;
-    recursive_calls = 0;
-
-    if (arr == NULL || size < 2) {
-        return;
-    }
-    sort_arr(arr, 0, size - 1);
-}
-
-void print_arr(int arr[], int size, const char* message) {
-    printf("%s", message);
-
-    int print_count = (size > 1000) ? 1000 : size;
-
-    for (int i = 0; i < print_count; i++) {
-        printf("%d ", arr[i]);
-    }
-
-    if (size > 1000) {
-        printf("... (показано 1000 из %d)\n", size);
-    }
-    else {
-        printf("\n");
-    }
-}
-
-void print_metrics(int size, double time_seconds) {
-    printf("\n");
-    printf("           МЕТРИКИ СОРТИРОВКИ\n");
-    printf("\n");
-    printf("  Размер массива:       %d\n", size);
-    printf("  Сравнений:            %lld\n", comparisons);
-    printf("  Обменов:              %lld\n", swaps);
-    printf("  Рекурсивных вызовов:  %lld\n", recursive_calls);
-    printf("  Время выполнения:     %.6f сек\n", time_seconds);
-    printf("\n");
-}
 
 void clear_input() {
     int c;
@@ -177,43 +71,21 @@ int read_int(const char* prompt, int* value) {
     return 1;
 }
 
-void menu() {
-    system("cls");
-    printf("\n");
-    printf("     БЫСТРАЯ СОРТИРОВКА (QuickSort)\n");
-    printf("\n");
-    printf("  1. Создать массив вручную\n");
-    printf("  2. Сгенерировать случайный массив\n");
-    printf("  3. Создать массив из одинаковых чисел\n");
-    printf("  4. Загрузить массив из файла\n");
-    printf("  5. Сохранить массив в файл\n");
-    printf("  6. Вывести текущий массив\n");
-    printf("  7. Отсортировать текущий массив\n");
-    printf("  8. Выйти из программы\n");
-    printf("\n");
-    printf("Ваш выбор: ");
-}
+void print_arr(int arr[], int size, const char* message) {
+    printf("%s", message);
 
-int read_menu_choice() {
-    char input[100];
-    if (fgets(input, sizeof(input), stdin) == NULL) {
-        return -1;
+    int print_count = (size > 1000) ? 1000 : size;
+
+    for (int i = 0; i < print_count; i++) {
+        printf("%d ", arr[i]);
     }
-    input[strcspn(input, "\n")] = 0;
-    if (strlen(input) == 0) {
-        printf("Ошибка: пустой ввод\n");
-        return -1;
+
+    if (size > 1000) {
+        printf("... (показано 1000 из %d)\n", size);
     }
-    if (!is_number(input)) {
-        printf("Ошибка: введите число от 1 до 8\n");
-        return -1;
+    else {
+        printf("\n");
     }
-    int choice = atoi(input);
-    if (choice < 1 || choice > 8) {
-        printf("Ошибка: введите число от 1 до 8\n");
-        return -1;
-    }
-    return choice;
 }
 
 void create_manual_array() {
@@ -445,64 +317,4 @@ void sort_current_array() {
     print_arr(current_array, current_size, "");
 
     print_metrics(current_size, time_seconds);
-}
-
-int main() {
-    SetConsoleOutputCP(65001);
-    SetConsoleCP(65001);
-
-    int choice;
-
-    do {
-        menu();
-        choice = read_menu_choice();
-
-        if (choice == -1) {
-            printf("\nНажмите Enter для продолжения...");
-            clear_input();
-            continue;
-        }
-
-        switch (choice) {
-        case 1:
-            create_manual_array();
-            break;
-        case 2:
-            generate_random_array();
-            break;
-        case 3:
-            create_identical_array();
-            break;
-        case 4:
-            load_from_file();
-            break;
-        case 5:
-            save_to_file();
-            break;
-        case 6:
-            if (current_size == 0) {
-                printf("\nМассив пуст!\n");
-            }
-            else {
-                printf("\nТекущий массив: ");
-                print_arr(current_array, current_size, "");
-            }
-            break;
-        case 7:
-            sort_current_array();
-            break;
-        case 8:
-            printf("\nВыход из программы...\n");
-            break;
-        default:
-            printf("\nОшибка: неверный выбор.\n");
-        }
-
-        if (choice != 8) {
-            printf("\nНажмите Enter для продолжения...");
-            clear_input();
-        }
-    } while (choice != 8);
-
-    return 0;
 }
