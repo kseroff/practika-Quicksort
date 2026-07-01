@@ -76,10 +76,19 @@ void quick_sort(int arr[], int size) {
 
 void print_arr(int arr[], int size, const char* message) {
     printf("%s", message);
-    for (int i = 0; i < size; i++) {
+
+    int print_count = (size > 1000) ? 1000 : size;
+
+    for (int i = 0; i < print_count; i++) {
         printf("%d ", arr[i]);
     }
-    printf("\n");
+
+    if (size > 1000) {
+        printf("... (показано 1000 из %d)\n", size);
+    }
+    else {
+        printf("\n");
+    }
 }
 
 void print_metrics(int size, double time_seconds) {
@@ -202,7 +211,19 @@ void create_manual_array() {
         printf("Ошибка: размер не может превышать %d\n", MAX_SIZE);
         return;
     }
-
+    if (n > 100) {
+        printf("\n ВНИМАНИЕ: Вы собираетесь вручную ввести %d чисел!\n", n);
+        printf("Рекомендуется использовать:\n");
+        printf("  - Пункт 2 (Сгенерировать случайный массив)\n");
+        printf("  - Пункт 3 (Загрузить массив из файла)\n");
+        printf("\nВы уверены, что хотите продолжить? (1 - да, 0 - нет): ");
+        int confirm;
+        if (scanf("%d", &confirm) != 1 || confirm != 1) {
+            clear_input();
+            return;
+        }
+        clear_input();
+    }
     printf("Введите %d элементов через пробел: ", n);
     int count = 0;
     while (count < n) {
@@ -259,7 +280,7 @@ void generate_random_array() {
 
 void load_from_file() {
     char filename[256];
-    printf("\nВведите имя файла для загрузки: ");
+    printf("\nВведите имя файла для загрузки (с расширением): ");
     if (fgets(filename, sizeof(filename), stdin) == NULL) {
         printf("Ошибка: пустой ввод\n");
         return;
@@ -277,27 +298,41 @@ void load_from_file() {
         return;
     }
 
+    int count = 0;
+    int temp;
+    char c;
+    while (fscanf(file, "%d", &temp) == 1) {
+        count++;
+        fscanf(file, "%c", &c);
+        if (c == ',') {
+        }
+    }
+
+    if (count > 50000) {
+        printf("Файл содержит %d чисел, будет загружено только 50000 чисел.!\n", count);
+        printf("Остальные %d чисел будут проигнорированы.\n", count - 50000);
+    }
+    rewind(file);
+
     current_size = 0;
     int num;
-    int result;
+
+
     while (current_size < MAX_SIZE) {
-        result = fscanf(file, "%d", &num);
-        if (result == EOF) {
-            break;
+
+        if (fscanf(file, "%d", &num) == 1) {
+            current_array[current_size] = num;
+            current_size++;
         }
-        if (result != 1) {
-            fclose(file);
-            printf("Ошибка: файл содержит некорректные данные (не число)\n");
-            current_size = 0;
-            return;
+        else {
+            if (feof(file)) break;
+            fgetc(file);
         }
-        current_array[current_size] = num;
-        current_size++;
     }
     fclose(file);
 
     if (current_size == 0) {
-        printf("Ошибка: файл пуст\n");
+        printf("Ошибка: файл пуст или не содержит чисел\n");
     }
     else {
         printf("\nЗагружено %d элементов из файла %s\n", current_size, filename);
@@ -323,6 +358,11 @@ void save_to_file() {
         return;
     }
 
+    char* ext = strrchr(filename, '.');
+    if (ext == NULL || (strcmp(ext, ".csv") != 0 && strcmp(ext, ".CSV") != 0)) {
+        strcat(filename, ".csv");
+    }
+
     FILE* file = fopen(filename, "w");
     if (file == NULL) {
         printf("Ошибка: не удалось создать файл '%s'\n", filename);
@@ -330,13 +370,17 @@ void save_to_file() {
     }
 
     for (int i = 0; i < current_size; i++) {
-        fprintf(file, "%d%c", current_array[i], (i == current_size - 1) ? '\n' : ' ');
+        fprintf(file, "%d", current_array[i]);
+        if (i < current_size - 1) {
+            fprintf(file, ",");
+        }
     }
-
     fprintf(file, "\n");
+
     fclose(file);
 
-    printf("\nМассив сохранён в файл %s\n", filename);
+    printf("\nМассив сохранён в CSV файл: %s\n", filename);
+    printf("Количество элементов: %d\n", current_size);
 }
 
 void sort_current_array() {
