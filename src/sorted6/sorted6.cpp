@@ -3,6 +3,9 @@
 #include <stdlib.h>
 #include <windows.h>
 #include <time.h>
+#include <ctype.h>
+#include <string.h>
+#include <limits.h>
 
 #define MAX_SIZE 1000
 
@@ -96,6 +99,58 @@ void clear_input() {
     while ((c = getchar()) != '\n' && c != EOF) {}
 }
 
+int is_number(const char* str) {
+    if (str == NULL || *str == '\0') {
+        return 0;
+    }
+    int i = 0;
+    if (str[0] == '-') {
+        i = 1;
+    }
+    for (; str[i] != '\0'; i++) {
+        if (!isdigit(str[i])) {
+            return 0;
+        }
+    }
+    return 1;
+}
+
+int read_int(const char* prompt, int* value) {
+    char input[100];
+    printf("%s", prompt);
+    if (fgets(input, sizeof(input), stdin) == NULL) {
+        return 0;
+    }
+
+    input[strcspn(input, "\n")] = '\0';
+
+    if (strlen(input) == 0) {
+        printf("Ошибка: пустой ввод\n");
+        return 0;
+    }
+
+    char* endptr;
+    long val = strtol(input, &endptr, 10);
+
+    if (*endptr != '\0') {
+        printf("Ошибка: введите целое число\n");
+        return 0;
+    }
+
+    if (val == LONG_MIN || val == LONG_MAX) {
+        printf("Ошибка: число вне допустимого диапазона\n");
+        return 0;
+    }
+
+    if (val < INT_MIN || val > INT_MAX) {
+        printf("Ошибка: число слишком большое для int\n");
+        return 0;
+    }
+
+    *value = (int)val;
+    return 1;
+}
+
 void menu() {
     system("cls");
     printf("\n");
@@ -112,48 +167,84 @@ void menu() {
     printf("Ваш выбор: ");
 }
 
+int read_menu_choice() {
+    char input[100];
+    if (fgets(input, sizeof(input), stdin) == NULL) {
+        return -1;
+    }
+    input[strcspn(input, "\n")] = 0;
+    if (strlen(input) == 0) {
+        printf("Ошибка: пустой ввод\n");
+        return -1;
+    }
+    if (!is_number(input)) {
+        printf("Ошибка: введите число от 1 до 7\n");
+        return -1;
+    }
+    int choice = atoi(input);
+    if (choice < 1 || choice > 7) {
+        printf("Ошибка: введите число от 1 до 7\n");
+        return -1;
+    }
+    return choice;
+}
+
 void create_manual_array() {
     int n;
-    printf("\nВведите размер массива: ");
-    scanf("%d", &n);
-    clear_input();
-
-    if (n <= 0  || n > MAX_SIZE) {
-        printf("\nОшибка: размер должен быть от 1 до %d\n", MAX_SIZE);
+    if (!read_int("\nВведите размер массива: ", &n)) {
+        return;
+    }
+    if (n <= 0) {
+        printf("Ошибка: размер должен быть больше 0\n");
+        return;
+    }
+    if (n > MAX_SIZE) {
+        printf("Ошибка: размер не может превышать %d\n", MAX_SIZE);
         return;
     }
 
-    current_size = n;
     printf("Введите %d элементов через пробел: ", n);
-    for (int i = 0; i < n; i++) {
-        scanf("%d", &current_array[i]);
+    int count = 0;
+    while (count < n) {
+        int val;
+        if (scanf("%d", &val) == 1) {
+            current_array[count] = val;
+            count++;
+        }
+        else {
+            printf("Ошибка: введите целое число\n");
+            clear_input();
+            return;
+        }
     }
     clear_input();
-
+    current_size = n;
     printf("\nМассив успешно создан!\n");
 }
 
 void generate_random_array() {
     int n, min_val, max_val;
-    printf("\nВведите размер массива: ");
-    scanf("%d", &n);
-    clear_input();
 
-    if (n <= 0 || n > MAX_SIZE) {
-        printf("\nОшибка: размер должен быть от 1 до %d\n", MAX_SIZE);
+    if (!read_int("\nВведите размер массива: ", &n)) {
+        return;
+    }
+    if (n <= 0) {
+        printf("Ошибка: размер должен быть больше 0\n");
+        return;
+    }
+    if (n > MAX_SIZE) {
+        printf("Ошибка: размер не может превышать %d\n", MAX_SIZE);
         return;
     }
 
-    printf("Введите минимальное значение: ");
-    scanf("%d", &min_val);
-    clear_input();
-
-    printf("Введите максимальное значение: ");
-    scanf("%d", &max_val);
-    clear_input();
-
+    if (!read_int("Введите минимальное значение: ", &min_val)) {
+        return;
+    }
+    if (!read_int("Введите максимальное значение: ", &max_val)) {
+        return;
+    }
     if (min_val >= max_val) {
-        printf("\nОшибка: минимум должен быть меньше максимума\n");
+        printf("Ошибка: минимум должен быть меньше максимума\n");
         return;
     }
 
@@ -165,26 +256,48 @@ void generate_random_array() {
 
     printf("\nСлучайный массив успешно создан!\n");
 }
+
 void load_from_file() {
     char filename[256];
     printf("\nВведите имя файла для загрузки: ");
-    fgets(filename, sizeof(filename), stdin);
+    if (fgets(filename, sizeof(filename), stdin) == NULL) {
+        printf("Ошибка: пустой ввод\n");
+        return;
+    }
     filename[strcspn(filename, "\n")] = 0;
+
+    if (strlen(filename) == 0) {
+        printf("Ошибка: имя файла не может быть пустым\n");
+        return;
+    }
 
     FILE* file = fopen(filename, "r");
     if (file == NULL) {
-        printf("\nОшибка: не удалось открыть файл %s\n", filename);
+        printf("Ошибка: файл '%s' не найден или не удалось открыть\n", filename);
         return;
     }
 
     current_size = 0;
-    while (fscanf(file, "%d", &current_array[current_size]) == 1 && current_size < MAX_SIZE) {
+    int num;
+    int result;
+    while (current_size < MAX_SIZE) {
+        result = fscanf(file, "%d", &num);
+        if (result == EOF) {
+            break;
+        }
+        if (result != 1) {
+            fclose(file);
+            printf("Ошибка: файл содержит некорректные данные (не число)\n");
+            current_size = 0;
+            return;
+        }
+        current_array[current_size] = num;
         current_size++;
     }
     fclose(file);
 
     if (current_size == 0) {
-        printf("\nОшибка: файл пуст или содержит некорректные данные\n");
+        printf("Ошибка: файл пуст\n");
     }
     else {
         printf("\nЗагружено %d элементов из файла %s\n", current_size, filename);
@@ -199,21 +312,27 @@ void save_to_file() {
 
     char filename[256];
     printf("\nВведите имя файла для сохранения: ");
-    fgets(filename, sizeof(filename), stdin);
+    if (fgets(filename, sizeof(filename), stdin) == NULL) {
+        printf("Ошибка: пустой ввод\n");
+        return;
+    }
     filename[strcspn(filename, "\n")] = 0;
+
+    if (strlen(filename) == 0) {
+        printf("Ошибка: имя файла не может быть пустым\n");
+        return;
+    }
 
     FILE* file = fopen(filename, "w");
     if (file == NULL) {
-        printf("\nОшибка: не удалось создать файл %s\n", filename);
+        printf("Ошибка: не удалось создать файл '%s'\n", filename);
         return;
     }
 
     for (int i = 0; i < current_size; i++) {
-        fprintf(file, "%d", current_array[i]);
-        if (i < current_size - 1) {
-            fprintf(file, ",");
-        }
+        fprintf(file, "%d%c", current_array[i], (i == current_size - 1) ? '\n' : ' ');
     }
+
     fprintf(file, "\n");
     fclose(file);
 
@@ -233,7 +352,6 @@ void sort_current_array() {
     quick_sort(current_array, current_size);
     clock_t end = clock();
     double time_seconds = (double)(end - start) / CLOCKS_PER_SEC;
-
     printf("Отсортированный массив: ");
     print_arr(current_array, current_size, "");
 
@@ -248,8 +366,13 @@ int main() {
 
     do {
         menu();
-        scanf("%d", &choice);
-        clear_input();
+        choice = read_menu_choice();
+
+        if (choice == -1) {
+            printf("\nНажмите Enter для продолжения...");
+            clear_input();
+            continue;
+        }
 
         switch (choice) {
         case 1:
@@ -265,8 +388,13 @@ int main() {
             sort_current_array();
             break;
         case 5:
-            printf("\nТекущий массив: ");
-            print_arr(current_array, current_size, "");
+            if (current_size == 0) {
+                printf("\nМассив пуст!\n");
+            }
+            else {
+                printf("\nТекущий массив: ");
+                print_arr(current_array, current_size, "");
+            }
             break;
         case 6:
             save_to_file();
@@ -275,7 +403,7 @@ int main() {
             printf("\nВыход из программы...\n");
             break;
         default:
-            printf("\nОшибка: неверный выбор. Попробуйте снова.\n");
+            printf("\nОшибка: неверный выбор.\n");
         }
 
         if (choice != 7) {
