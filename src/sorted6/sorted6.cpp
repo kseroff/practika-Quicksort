@@ -5,6 +5,7 @@
 #include <time.h>
 #include <ctype.h>
 #include <string.h>
+#include <limits.h>
 
 #define MAX_SIZE 1000
 
@@ -99,7 +100,7 @@ void clear_input() {
 }
 
 int is_number(const char* str) {
-    if (str == NULL || * str == '\0') {
+    if (str == NULL || *str == '\0') {
         return 0;
     }
     int i = 0;
@@ -120,16 +121,33 @@ int read_int(const char* prompt, int* value) {
     if (fgets(input, sizeof(input), stdin) == NULL) {
         return 0;
     }
-    input[strcspn(input, "\n")] = 0;
+
+    input[strcspn(input, "\n")] = '\0';
+
     if (strlen(input) == 0) {
         printf("Ошибка: пустой ввод\n");
         return 0;
     }
-    if (!is_number(input)) {
+
+    char* endptr;
+    long val = strtol(input, &endptr, 10);
+
+    if (*endptr != '\0') {
         printf("Ошибка: введите целое число\n");
         return 0;
     }
-    *value = atoi(input);
+
+    if (val == LONG_MIN || val == LONG_MAX) {
+        printf("Ошибка: число вне допустимого диапазона\n");
+        return 0;
+    }
+
+    if (val < INT_MIN || val > INT_MAX) {
+        printf("Ошибка: число слишком большое для int\n");
+        return 0;
+    }
+
+    *value = (int)val;
     return 1;
 }
 
@@ -185,7 +203,6 @@ void create_manual_array() {
         return;
     }
 
-    current_size = n;
     printf("Введите %d элементов через пробел: ", n);
     int count = 0;
     while (count < n) {
@@ -201,7 +218,7 @@ void create_manual_array() {
         }
     }
     clear_input();
-
+    current_size = n;
     printf("\nМассив успешно создан!\n");
 }
 
@@ -313,11 +330,9 @@ void save_to_file() {
     }
 
     for (int i = 0; i < current_size; i++) {
-        fprintf(file, "%d", current_array[i]);
-        if (i < current_size - 1) {
-            fprintf(file, ",");
-        }
+        fprintf(file, "%d%c", current_array[i], (i == current_size - 1) ? '\n' : ' ');
     }
+
     fprintf(file, "\n");
     fclose(file);
 
