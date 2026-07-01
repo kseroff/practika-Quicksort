@@ -124,7 +124,14 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="sorted6.cpp" />
+    <ClCompile Include="array_io.c" />
+    <ClCompile Include="main.c" />
+    <ClCompile Include="sort.c" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="array_io.h" />
+    <ClInclude Include="metrics.h" />
+    <ClInclude Include="sort.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
