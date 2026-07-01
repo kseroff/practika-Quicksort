@@ -22,44 +22,61 @@ void swap(int* a, int* b) {
     swaps++;
 }
 
-int partition(int arr[], int first, int last) {
-    int mid = first + (last - first) / 2;
+void three_way_partition(int arr[], int first, int last, int* lt, int* gt) {
+    if (first >= last) {
+        *lt = first;
+        *gt = last;
+        return;
+    }
 
-    comparisons++;
-    if (arr[first] > arr[mid]) {
-        swap(&arr[first], &arr[mid]);
-    }
-    comparisons++;
-    if (arr[first] > arr[last]) {
-        swap(&arr[first], &arr[last]);
-    }
-    comparisons++;
-    if (arr[mid] > arr[last]) {
-        swap(&arr[mid], &arr[last]);
-    }
+    int mid = first + (last - first) / 2;
+    if (arr[first] > arr[mid]) swap(&arr[first], &arr[mid]);
+    if (arr[first] > arr[last]) swap(&arr[first], &arr[last]);
+    if (arr[mid] > arr[last]) swap(&arr[mid], &arr[last]);
     swap(&arr[mid], &arr[last]);
 
     int pivot = arr[last];
-    int i = first - 1;
+    int i = first;
+    int lt_ptr = first;
+    int gt_ptr = last;
 
-    for (int j = first; j < last; j++) {
+    while (i <= gt_ptr) {
         comparisons++;
-        if (arr[j] <= pivot) {
+        if (arr[i] < pivot) {
+            swap(&arr[i], &arr[lt_ptr]);
+            lt_ptr++;
             i++;
-            swap(&arr[i], &arr[j]);
+        }
+        else if (arr[i] > pivot) {
+            swap(&arr[i], &arr[gt_ptr]);
+            gt_ptr--;
+        }
+        else {
+            i++;
         }
     }
-    swap(&arr[i + 1], &arr[last]);
 
-    return i + 1;
+    *lt = lt_ptr;
+    *gt = gt_ptr;
 }
 
 void sort_arr(int arr[], int first, int last) {
     recursive_calls++;
     if (first < last) {
-        int p_index = partition(arr, first, last);
-        sort_arr(arr, first, p_index - 1);
-        sort_arr(arr, p_index + 1, last);
+        int lt, gt;
+        three_way_partition(arr, first, last, &lt, &gt);
+
+        int left_size = lt - first;
+        int right_size = last - gt;
+
+        if (left_size < right_size) {
+            sort_arr(arr, first, lt - 1);
+            sort_arr(arr, gt + 1, last);
+        }
+        else {
+            sort_arr(arr, gt + 1, last);
+            sort_arr(arr, first, lt - 1);
+        }
     }
 }
 
@@ -68,7 +85,7 @@ void quick_sort(int arr[], int size) {
     swaps = 0;
     recursive_calls = 0;
 
-    if (arr == NULL  || size < 2) {
+    if (arr == NULL || size < 2) {
         return;
     }
     sort_arr(arr, 0, size - 1);
@@ -167,11 +184,12 @@ void menu() {
     printf("\n");
     printf("  1. Создать массив вручную\n");
     printf("  2. Сгенерировать случайный массив\n");
-    printf("  3. Загрузить массив из файла\n");
-    printf("  4. Отсортировать текущий массив\n");
-    printf("  5. Вывести текущий массив\n");
-    printf("  6. Сохранить массив в файл\n");
-    printf("  7. Выйти из программы\n");
+    printf("  3. Создать массив из одинаковых чисел\n");
+    printf("  4. Загрузить массив из файла\n");
+    printf("  5. Сохранить массив в файл\n");
+    printf("  6. Вывести текущий массив\n");
+    printf("  7. Отсортировать текущий массив\n");
+    printf("  8. Выйти из программы\n");
     printf("\n");
     printf("Ваш выбор: ");
 }
@@ -187,12 +205,12 @@ int read_menu_choice() {
         return -1;
     }
     if (!is_number(input)) {
-        printf("Ошибка: введите число от 1 до 7\n");
+        printf("Ошибка: введите число от 1 до 8\n");
         return -1;
     }
     int choice = atoi(input);
-    if (choice < 1 || choice > 7) {
-        printf("Ошибка: введите число от 1 до 7\n");
+    if (choice < 1 || choice > 8) {
+        printf("Ошибка: введите число от 1 до 8\n");
         return -1;
     }
     return choice;
@@ -276,6 +294,33 @@ void generate_random_array() {
     }
 
     printf("\nСлучайный массив успешно создан!\n");
+}
+
+void create_identical_array() {
+    int n, value;
+
+    if (!read_int("\nВведите размер массива (до 50000): ", &n)) {
+        return;
+    }
+    if (n <= 0) {
+        printf("Ошибка: размер должен быть больше 0\n");
+        return;
+    }
+    if (n > MAX_SIZE) {
+        printf("Ошибка: размер не может превышать %d\n", MAX_SIZE);
+        return;
+    }
+
+    if (!read_int("Введите число для заполнения массива: ", &value)) {
+        return;
+    }
+
+    for (int i = 0; i < n; i++) {
+        current_array[i] = value;
+    }
+    current_size = n;
+
+    printf("\n Создан массив из %d одинаковых чисел (%d)\n", n, value);
 }
 
 void load_from_file() {
@@ -426,12 +471,15 @@ int main() {
             generate_random_array();
             break;
         case 3:
-            load_from_file();
+            create_identical_array();
             break;
         case 4:
-            sort_current_array();
+            load_from_file();
             break;
         case 5:
+            save_to_file();
+            break;
+        case 6:
             if (current_size == 0) {
                 printf("\nМассив пуст!\n");
             }
@@ -440,21 +488,21 @@ int main() {
                 print_arr(current_array, current_size, "");
             }
             break;
-        case 6:
-            save_to_file();
-            break;
         case 7:
+            sort_current_array();
+            break;
+        case 8:
             printf("\nВыход из программы...\n");
             break;
         default:
             printf("\nОшибка: неверный выбор.\n");
         }
 
-        if (choice != 7) {
+        if (choice != 8) {
             printf("\nНажмите Enter для продолжения...");
             clear_input();
         }
-    } while (choice != 7);
+    } while (choice != 8);
 
     return 0;
 }
